@@ -1,22 +1,23 @@
 <template>
     <div class="container">
         <div class="left">
-            <div
+            <div v-if="filePreview != null"
                 class="previewBlock"
                 @click="chooseFile"
                 :style="{ 'background-image': `url(${filePreview})` }">
             </div>
-
             <div>
-                <input
-                class="browseBtn"
-                ref="fileInput"
-                type="file"
-                id="formFileLg"
-                @input="selectImgFile">
+                <button v-if="filePreview != null && !loading" class="uploadBtn" @click="uploadImg">Upload</button>
+                <img v-if="loading" alt="Vue logo" src="../assets/loading-circle.webp">
             </div>
-            <div>
-                <button class="uploadBtn" @click="uploadImg">Upload</button>
+            <div v-if="!loading" class="label-div">
+                <label for="formFileLg">Select a new file to upload</label>
+                <input
+                class="uploadBtn"
+                ref="fileInput"
+                id="formFileLg"
+                type="file"
+                @input="selectImgFile">
             </div>
         </div>
         <div class="right">
@@ -66,10 +67,7 @@ export default {
             filePreview: null,
             image: '',
             faces: null,
-            yes_no: {
-                "true": "Yes",
-                "false": "No"
-            },
+            loading: false,
             labels: {
                 "Number_of_Faces" : "Number of people",
                 "Male": "Number of Male",
@@ -91,11 +89,12 @@ export default {
     methods: {
         chooseFile () {
             this.$refs.fileInput.click()
+            this.faces = null
         },
         selectImgFile () {
             let fileInput = this.$refs.fileInput
             let imgFile = fileInput.files
-
+            this.faces = null
             if (imgFile && imgFile[0]) {
                 let reader = new FileReader
                 reader.onload = e => {
@@ -110,7 +109,7 @@ export default {
             let fileInput = this.$refs.fileInput
             let imgFile = fileInput.files
             this.faces = null
-
+            this.loading = true
             if (imgFile && imgFile[0]) {
                 // let formData = new FormData()
                 // formData.append('file', imgFile[0])
@@ -122,7 +121,11 @@ export default {
                         console.log(response.data)
                         console.log("faces received")
                         this.faces = response.data
+                        this.loading = false
                         console.log(this.faces)
+                    }, (error) => {
+                        console.log(error)
+                        this.loading = false
                     }
                 )
             }
@@ -140,10 +143,11 @@ export default {
     display: block;
     cursor: pointer;
     width: 800px;
-    height: 600px; 
+    height: 500px;
     margin: 0 auto 20px;
     background-position: center center;
-    background-size: cover;
+    background-size: 100% auto;
+    background-repeat: no-repeat;
 }
 h3 {
     margin: 40px 0 0;
@@ -159,13 +163,44 @@ li {
 a {
     color: #42b983;
 }
+label {
+    cursor: pointer;
+    background: #FFED86;
+    border-radius: 999px;
+    box-shadow: #FFED86 0 10px 20px -10px;
+    box-sizing: border-box;
+    color: black;
+    cursor: pointer;
+    font-family: Inter,Helvetica,"Apple Color Emoji","Segoe UI Emoji",NotoColorEmoji,"Noto Color Emoji","Segoe UI Symbol","Android Emoji",EmojiSymbols,-apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans",sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    opacity: 1;
+    outline: 0 solid transparent;
+    padding: 8px 18px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    width: fit-content;
+    word-break: break-word;
+    border: 0;
+}
+
+.label-div {
+    margin-top:70px;
+}
+#formFileLg {
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+}
 /* CSS */
 .uploadBtn {
-  background: #5E5DF0;
+  background: #FFED86;
   border-radius: 999px;
-  box-shadow: #5E5DF0 0 10px 20px -10px;
+  box-shadow: #FFED86 0 10px 20px -10px;
   box-sizing: border-box;
-  color: #FFFFFF;
+  color: black;
   cursor: pointer;
   font-family: Inter,Helvetica,"Apple Color Emoji","Segoe UI Emoji",NotoColorEmoji,"Noto Color Emoji","Segoe UI Symbol","Android Emoji",EmojiSymbols,-apple-system,system-ui,"Segoe UI",Roboto,"Helvetica Neue","Noto Sans",sans-serif;
   font-size: 16px;
@@ -180,15 +215,17 @@ a {
   width: fit-content;
   word-break: break-word;
   border: 0;
+  margin-top:60px;
 }
 
 .left {
     display: inline-block;    
-    padding-right: 100px;
+    /* padding-right: 100px; */
 }
 .right {
     vertical-align:top;
     display: inline-block;
+    margin-left: 20px;
 }
 
 table {
