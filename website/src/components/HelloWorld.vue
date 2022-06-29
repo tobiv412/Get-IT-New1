@@ -1,10 +1,42 @@
 <template>
     <div class="container">
         <div class="left">
-            <div v-if="filePreview != null"
-                class="previewBlock"
-                @click="chooseFile"
-                :style="{ 'background-image': `url(${filePreview})` }">
+            <div class="wrapper-image">
+                <div v-if="filePreview != null"
+                    class="previewBlock"
+                    @click="chooseFile"
+                    :style="{ 'background-image': `url(${filePreview})`, width: imageWidth + 'px', height: imageHeight + 'px'}">
+                </div>
+                <div v-if="faces != null && FemaleBoxHover">
+                    <div v-for="(box, i) in faces['Female']['BoundingBoxes']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && MaleBoxHover">
+                    <div v-for="(box, i) in faces['Male']['BoundingBoxes']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && BeardBoxHover">
+                    <div v-for="(box, i) in faces['Beard']['BoundingBoxes']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && MustacheBoxHover">
+                    <div v-for="(box, i) in faces['Mustache']['BoundingBoxes']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && GeneralEmotionBoxHover">
+                    <div :style="{ top : faces['General_Emotion']['BoundingBox'][0]['Top'] * imageHeight + 'px', left : faces['General_Emotion']['BoundingBox'][0]['Left'] * imageWidth + 'px', width : faces['General_Emotion']['BoundingBox'][0]['Width'] * imageWidth + 'px', height : faces['General_Emotion']['BoundingBox'][0]['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && EyeglassesBoxHover">
+                    <div v-for="(box, i) in faces['Eyeglasses']['BoundingBoxes']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && SunglassesBoxHover">
+                    <div v-for="(box, i) in faces['Sunglasses']['BoundingBoxes']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && MouthOpenBoxHover">
+                    <div v-for="(box, i) in faces['MouthOpen']['BoundingBoxes']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && AgeRangeBoxHover">
+                    <div v-for="(box, i) in faces['AgeRange']['BoundingBoxesHigh']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
+                <div v-if="faces != null && AgeRangeBoxHover">
+                    <div v-for="(box, i) in faces['AgeRange']['BoundingBoxesLow']" :key="i" :style="{ top : box['Top'] * imageHeight + 'px', left : box['Left'] * imageWidth + 'px', width : box['Width'] * imageWidth + 'px', height : box['Height'] * imageHeight + 'px' }" class="box"></div>
+                </div>
             </div>
             <div>
                 <button v-if="filePreview != null && !loading" class="uploadBtn" @click="uploadImg">Upload</button>
@@ -26,17 +58,87 @@
                     <table class="table">
                     <thead><tr><th>Attributes</th><th>Values</th></tr></thead>
                     <tbody>
-                        <tr v-for="(row, i) in faces" :key="i">
-                            <!-- <th><span v-for="(en, i) in row" :key="i">{{ en }}<span v-if="row.length > 1 && i < row.length - 1">, </span></span></th> -->
-                            <th v-if="i != 'Number_of_Celebrities' && i != 'Celebrities'">{{ labels[i] }}</th>
-                            <th v-if="i == 'AgeRange'">Between {{ row["Low"] }} and {{ row["High"] }} years old</th>
-                            <th v-else-if="i == 'General_Emotion'">{{ row["emotion"] }}</th>
-                            <th v-else-if="i == 'Beard'">{{ row["Amount"] }}</th>
-                            <th v-else-if="i == 'Mustache'">{{ row["Amount"] }}</th>
-                            <th v-else-if="i == 'Eyeglasses'">{{ row["Amount"] }}</th>
-                            <th v-else-if="i == 'Sunglasses'">{{ row["Amount"] }}</th>
-                            <th v-else-if="i == 'MouthOpen'">{{ row["Amount"] }}</th>
-                            <th v-else-if="i != 'Number_of_Celebrities' && i != 'Celebrities'">{{ row }}</th>
+                        <tr v-for="(row, i) in faces" :key="i" :class="{ active: $data[`${hoverList[i]}`] }">
+                            <!-- ATTRIBUTES -->
+                            <th v-if="i != 'Number_of_Celebrities' && i != 'Celebrities'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ labels[i] }}
+                                </div>
+                                <div v-else>
+                                {{ labels[i] }}
+                                </div>
+                            </th>
+                            <!-- VALUES -->    
+                            <th v-if="i == 'AgeRange'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                Between {{ row["Low"] }} and {{ row["High"] }} years old
+                                </div>
+                            </th>
+                            <th v-else-if="i == 'General_Emotion'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ row["emotion"] }}
+                                </div>
+                            </th>
+                            <th v-else-if="i == 'Beard'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ row["Amount"] }}
+                                </div>
+                            </th>
+                            <th v-else-if="i == 'Mustache'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ row["Amount"] }}
+                                </div>
+                            </th>
+                            <th v-else-if="i == 'Eyeglasses'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ row["Amount"] }}
+                                </div>
+                            </th>
+                            <th v-else-if="i == 'Sunglasses'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ row["Amount"] }}
+                                </div>
+                            </th>
+                            <th v-else-if="i == 'MouthOpen'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ row["Amount"] }}
+                                </div>
+                            </th>
+                            <th v-else-if="i != 'Number_of_Celebrities' && i != 'Celebrities'">
+                                <div v-if="i != 'Number_of_Faces'"
+                                @mouseover="$data[`${hoverList[i]}`] = true"
+                                @mouseleave="$data[`${hoverList[i]}`] = false"
+                                >
+                                {{ row["Amount"] }}
+                                </div>
+                                <div v-else>
+                                    {{ row["Amount"] }}
+                                </div>
+                            </th>
                         </tr>
                     </tbody>
                     </table>
@@ -65,9 +167,20 @@ export default {
     data () {
         return {
             filePreview: null,
-            image: '',
+            image: null,
+            imageWidth: 800,
+            imageHeight: 500,
             faces: null,
             loading: false,
+            MaleBoxHover: false,
+            FemaleBoxHover: false,
+            AgeRangeBoxHover: false,
+            BeardBoxHover: false,
+            MustacheBoxHover: false,
+            GeneralEmotionBoxHover: false,
+            EyeglassesBoxHover: false,
+            SunglassesBoxHover: false,
+            MouthOpenBoxHover: false,
             labels: {
                 "Number_of_Faces" : "Number of people",
                 "Male": "Number of Male",
@@ -81,8 +194,17 @@ export default {
                 "MouthOpen": "Anyone with a mouth open",
                 "Number_of_Celebrities": "Number of celebrities",
                 "Celebrities": "List of Celebrities",
-
-
+            },
+            hoverList: {
+                "Male":"MaleBoxHover",
+                "Female":"FemaleBoxHover",
+                "AgeRange":"AgeRangeBoxHover",
+                "Beard":"BeardBoxHover",
+                "Mustache":"MustacheBoxHover",
+                "General_Emotion":"GeneralEmotionBoxHover",
+                "Eyeglasses":"EyeglassesBoxHover",
+                "Sunglasses":"SunglassesBoxHover",
+                "MouthOpen":"MouthOpenBoxHover"
             }
         };
     },
@@ -92,14 +214,27 @@ export default {
             this.faces = null
         },
         selectImgFile () {
+            let width = 0
+            let height = 0
             let fileInput = this.$refs.fileInput
             let imgFile = fileInput.files
-            this.faces = null
             if (imgFile && imgFile[0]) {
+                this.faces = null
                 let reader = new FileReader
                 reader.onload = e => {
+                    const img = new Image();
+                    img.src = e.target.result;
                     this.filePreview = e.target.result
                     this.image = e.target.result
+                    // img.onload = () => {
+                    //     console.log(img.width, img.height);
+                    //     this.imageWidth = img.width
+                    //     this.imageHeight = img.height
+                    //     console.log("Width: " + this.imageWidth)
+                    //     console.log("Height: " + this.imageHeight)
+                    //     this.$emit('imageWidth', this.imageWidth)
+                    //     this.$emit('imageHeight', this.imageHeight)
+                    // }
                 }
                 reader.readAsDataURL(imgFile[0])
                 this.$emit('fileInput', imgFile[0])
@@ -111,18 +246,16 @@ export default {
             this.faces = null
             this.loading = true
             if (imgFile && imgFile[0]) {
-                // let formData = new FormData()
-                // formData.append('file', imgFile[0])
-                // formData.append('Content-Type', "image/jpeg")
                 const { image } = this
-                // let response = await axios.post('https://ladlt4husj.execute-api.eu-west-1.amazonaws.com/detect_gw_stage/detect', { image })
                 axios.post('https://ladlt4husj.execute-api.eu-west-1.amazonaws.com/detect_gw_stage/detect', { image })
                     .then((response) => {
-                        console.log(response.data)
-                        console.log("faces received")
                         this.faces = response.data
                         this.loading = false
-                        console.log(this.faces)
+                        // console.log(response.data)
+                        // console.log("faces received")
+                        console.log(Object.keys(this.faces))
+                        console.log(this.faces['General_Emotion']['BoundingBox'][0])
+                        console.log(this.faces["General_Emotion"]["BoundingBox"][0]["Top"])
                     }, (error) => {
                         console.log(error)
                         this.loading = false
@@ -142,12 +275,21 @@ export default {
 .previewBlock {
     display: block;
     cursor: pointer;
-    width: 800px;
-    height: 500px;
+    /* width: 800px;
+    height: 500px; */
     margin: 0 auto 20px;
     background-position: center center;
     background-size: 100% auto;
     background-repeat: no-repeat;
+}
+.wrapper-image {
+    position:relative;
+}
+
+.box {
+    position:absolute;
+    border:2px solid #ffffff;
+    background-color:transparent
 }
 h3 {
     margin: 40px 0 0;
@@ -243,15 +385,19 @@ table {
 td,th { padding-left:8px }
 
 thead tr {
-  height:60px;
-  background:#FFED86;
-  font-size:16px;
+    height:60px;
+    background:#FFED86;
+    font-size:16px;
 }
 
-tbody tr { height:48px; border-bottom:1px solid #E3F1D5 ;
+tbody tr { height:48px; border-bottom:1px solid #E3F1D5 ; cursor: pointer;
 }
 
 td,th { text-align:left;
+}
+
+.active {
+  background:#f4ecc0;
 }
 
 </style>

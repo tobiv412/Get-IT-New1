@@ -22,80 +22,109 @@ def buildResponse(result):
 
 def detect_faces(faces):
     result = {}
-    result["Number_of_Faces"] = len(faces)
-    result["Male"] = 0
-    result["Female"] = 0
+    result["Number_of_Faces"] = {
+        "Amount": len(faces)
+    }
+    result["Male"] = {
+        "Amount": 0,
+        "BoundingBoxes": []
+    }
+    result["Female"] = {
+        "Amount": 0,
+        "BoundingBoxes": []
+    }
     result["AgeRange"] = {
         "High": 0,
-        "Low": 100
+        "Low": 100,
+        "BoundingBoxesHigh": [],
+        "BoundingBoxesLow": [],
     }
     result["Beard"] = {
         "Value": False,
-        "Amount": 0
+        "Amount": 0,
+        "BoundingBoxes": []
     }
     result["Mustache"] = {
         "Value": False,
-        "Amount": 0
+        "Amount": 0,
+        "BoundingBoxes": []
     }
     result["General_Emotion"] = {
         "emotion": "",
-        "score": 0
+        "score": 0,
+        "BoundingBoxes": []
     }
     result["Eyeglasses"] = {
         "Value": False,
-        "Amount": 0
+        "Amount": 0,
+        "BoundingBoxes": []
     }
     result["Sunglasses"] = {
         "Value": False,
-        "Amount": 0
+        "Amount": 0,
+        "BoundingBoxes": []
     }
     result["MouthOpen"] = {
         "Value": False,
-        "Amount": 0
+        "Amount": 0,
+        "BoundingBoxes": []
     }
     for face in faces:
         # Calculate number of Male and Female
         if face["Gender"]["Value"] == "Male":
-            result["Male"] += 1
+            result["Male"]["Amount"] += 1
+            result["Male"]["BoundingBoxes"].append(face["BoundingBox"])
         elif face["Gender"]["Value"] == "Female":
-            result["Female"] += 1
+            result["Female"]["Amount"] += 1
+            result["Female"]["BoundingBoxes"].append(face["BoundingBox"])
 
         # Get the General AgeRange
         if face["AgeRange"]["High"] > result["AgeRange"]["High"]:
             result["AgeRange"]["High"] = face["AgeRange"]["High"]
+            result["AgeRange"]["BoundingBoxesHigh"] = []
+            result["AgeRange"]["BoundingBoxesHigh"].append(face["BoundingBox"])
         if face["AgeRange"]["Low"] < result["AgeRange"]["Low"]:
             result["AgeRange"]["Low"] = face["AgeRange"]["Low"]
+            result["AgeRange"]["BoundingBoxesLow"] = []
+            result["AgeRange"]["BoundingBoxesLow"].append(face["BoundingBox"])
 
         # Get anyone with a beard
         if face["Beard"]["Value"]:
             result["Beard"]["Value"] = True
             result["Beard"]["Amount"] += 1
+            result["Beard"]["BoundingBoxes"].append(face["BoundingBox"])
 
         # Get anyone with a mustache
         if face["Mustache"]["Value"]:
             result["Mustache"]["Value"] = True
             result["Mustache"]["Amount"] += 1
+            result["Mustache"]["BoundingBoxes"].append(face["BoundingBox"])
 
         # Get the general emotion
         for emo in face["Emotions"]:
             if emo["Confidence"] > result["General_Emotion"]["score"]:
                 result["General_Emotion"]["emotion"] = emo["Type"]
                 result["General_Emotion"]["score"] = emo["Confidence"]
+                result["General_Emotion"]["BoundingBox"] = []
+                result["General_Emotion"]["BoundingBox"].append(face["BoundingBox"])
 
         # Get anyone with a glasses
         if face["Eyeglasses"]["Value"]:
             result["Eyeglasses"]["Value"] = True
             result["Eyeglasses"]["Amount"] += 1
+            result["Eyeglasses"]["BoundingBoxes"].append(face["BoundingBox"])
 
         # Get anyone with a sunglasses
         if face["Sunglasses"]["Value"]:
-            result["Sunglases"]["Value"] = True
-            result["Sunglases"]["Amount"] += 1
+            result["Sunglasses"]["Value"] = True
+            result["Sunglasses"]["Amount"] += 1
+            result["Sunglasses"]["BoundingBoxes"].append(face["BoundingBox"])
 
         # Get anyone with a mouth open
         if face["MouthOpen"]["Value"]:
             result["MouthOpen"]["Value"] = True
             result["MouthOpen"]["Amount"] += 1
+            result["MouthOpen"]["BoundingBoxes"].append(face["BoundingBox"])
     return result
 
 def lambda_handler(event, context):
